@@ -10,7 +10,11 @@
   },
   "dependencies": {
     "@chakra-ui/react": "^2.10.6",
+    "@reown/walletkit": "^1.2.1",
+    "@walletconnect/core": "^2.19.0",
+    "@walletconnect/utils": "^2.19.0",
     "alchemy-sdk": "^2.2.5",
+    "dotenv": "^16.4.7",
     "ethers": "^5.7.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

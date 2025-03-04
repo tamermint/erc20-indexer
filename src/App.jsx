@@ -11,12 +11,30 @@ import {
 } from "@chakra-ui/react";
 import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
+import { ethers } from "ethers";
+import { Core } from "@walletconnect/core";
+import { WalletKit } from "@reown/walletkit";
+import { configDotenv } from "dotenv";
 
 function App() {
   const [userAddress, setUserAddress] = useState("");
   const [results, setResults] = useState([]);
   const [hasQueried, setHasQueried] = useState(false);
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
+
+  const core = new Core({
+    projectId: configDotenv.REOWN_PROJECT_ID,
+  });
+
+  const walletKit = WalletKit.init({
+    core, // <- pass the shared `core` instance
+    metadata: {
+      name: "ERC20 Indexer app",
+      description: "Demo Client as Wallet/Peer",
+      url: "",
+      icons: [],
+    },
+  });
 
   async function getTokenBalance() {
     const config = {
@@ -41,10 +59,21 @@ function App() {
     setTokenDataObjects(await Promise.all(tokenDataPromises));
     setHasQueried(true);
   }
+
+  async function connectWallet() {
+    if (!window.ethereum) {
+      alert("Please install a wallet!");
+      return;
+    }
+    try {
+    } catch {}
+  }
   return (
-    <Box w="100vw">
+    <Box w="100vw" h="100vh">
       <Box position="absolute" top="50" right="50">
-        <Button size="md">Connect Wallet</Button>
+        <Button size="lg" colorScheme="teal" variant="outline">
+          Connect Wallet
+        </Button>
       </Box>
       <Center>
         <Flex
@@ -52,7 +81,7 @@ function App() {
           justifyContent="center"
           flexDirection={"column"}
         >
-          <Heading mb={0} fontSize={36}>
+          <Heading m="50" size="2xl">
             ERC-20 Token Indexer
           </Heading>
           <Text>
@@ -67,7 +96,7 @@ function App() {
         alignItems="center"
         justifyContent={"center"}
       >
-        <Heading mt={42}>
+        <Heading mt={10} mb={10}>
           Get all the ERC-20 token balances of this address:
         </Heading>
         <Input
@@ -81,14 +110,15 @@ function App() {
         />
         <Button
           fontSize={20}
-          variant="solid"
-          colorScheme="whiteAlpha"
+          size="lg"
+          colorScheme="teal"
+          variant="outline"
           onClick={getTokenBalance}
-          mt={36}
+          mt={10}
         >
           Check ERC-20 Token Balances
         </Button>
-        <Heading my={36}>ERC-20 token balances:</Heading>
+        <Heading my={20}>ERC-20 token balances:</Heading>
         {hasQueried ? (
           <SimpleGrid w={"90vw"} columns={4} spacing={24}>
             {results.tokenBalances.map((e, i) => {
