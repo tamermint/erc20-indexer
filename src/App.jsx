@@ -43,6 +43,9 @@ function App() {
   }
   return (
     <Box w="100vw">
+      <Box position="absolute" top="50" right="50">
+        <Button size="md">Connect Wallet</Button>
+      </Box>
       <Center>
         <Flex
           alignItems={"center"}
@@ -76,12 +79,16 @@ function App() {
           bgColor="white"
           fontSize={24}
         />
-        <Button fontSize={20} onClick={getTokenBalance} mt={36} bgColor="blue">
+        <Button
+          fontSize={20}
+          variant="solid"
+          colorScheme="whiteAlpha"
+          onClick={getTokenBalance}
+          mt={36}
+        >
           Check ERC-20 Token Balances
         </Button>
-
         <Heading my={36}>ERC-20 token balances:</Heading>
-
         {hasQueried ? (
           <SimpleGrid w={"90vw"} columns={4} spacing={24}>
             {results.tokenBalances.map((e, i) => {
