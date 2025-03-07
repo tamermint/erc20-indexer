@@ -12,8 +12,6 @@ import {
 import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
 import { ethers } from "ethers";
-import { Core } from "@walletconnect/core";
-import { WalletKit } from "@reown/walletkit";
 import { configDotenv } from "dotenv";
 
 function App() {
@@ -22,23 +20,9 @@ function App() {
   const [hasQueried, setHasQueried] = useState(false);
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
 
-  const core = new Core({
-    projectId: configDotenv.REOWN_PROJECT_ID,
-  });
-
-  const walletKit = WalletKit.init({
-    core, // <- pass the shared `core` instance
-    metadata: {
-      name: "ERC20 Indexer app",
-      description: "Demo Client as Wallet/Peer",
-      url: "",
-      icons: [],
-    },
-  });
-
   async function getTokenBalance() {
     const config = {
-      apiKey: "TFbZzSnJh2XYSlBHtQfyic4DK7F3bfBU",
+      apiKey: configDotenv.ALCHEMY_API_KEY,
       network: Network.ETH_MAINNET,
     };
 
