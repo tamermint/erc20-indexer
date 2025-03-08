@@ -11,14 +11,17 @@ import {
 } from "@chakra-ui/react";
 import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
-import { ethers } from "ethers";
 import { configDotenv } from "dotenv";
+import { client } from "./client";
+import { useConnect } from "thirdweb/react";
+import { createWallet, injectedProvider } from "thirdweb/wallets";
 
 function App() {
   const [userAddress, setUserAddress] = useState("");
   const [results, setResults] = useState([]);
   const [hasQueried, setHasQueried] = useState(false);
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
+  const { connect, isConnecting, error } = useConnect();
 
   async function getTokenBalance() {
     const config = {
@@ -44,18 +47,30 @@ function App() {
     setHasQueried(true);
   }
 
-  async function connectWallet() {
+  function connectWallet() {
     if (!window.ethereum) {
       alert("Please install a wallet!");
       return;
     }
     try {
-    } catch {}
+      connect(async () => {
+        const wallet = await createWallet(injectedProvider);
+        await wallet.connect({ client });
+        return wallet;
+      });
+    } catch {
+      alert("Error connecting wallet");
+    }
   }
   return (
     <Box w="100vw" h="100vh">
       <Box position="absolute" top="50" right="50">
-        <Button size="lg" colorScheme="teal" variant="outline">
+        <Button
+          size="lg"
+          colorScheme="teal"
+          variant="outline"
+          onClick={connectWallet}
+        >
           Connect Wallet
         </Button>
       </Box>
