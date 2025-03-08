@@ -17,7 +17,11 @@ import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
 import { configDotenv } from "dotenv";
 import { shortenAddress } from "thirdweb/utils";
-import { useConnectModal, useDisconnect } from "thirdweb/react";
+import {
+  useConnectModal,
+  useDisconnect,
+  useActiveWallet,
+} from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
 
 function App() {
@@ -31,6 +35,7 @@ function App() {
   const [shortenedAddress, setShortenedAddress] = useState("");
   const { connect, isConnecting } = useConnectModal();
   const { disconnect } = useDisconnect();
+  const activeWallet = useActiveWallet();
 
   const client = createThirdwebClient({
     clientId: "99af623f39156b036e73c5b25a993162",
@@ -106,10 +111,20 @@ function App() {
   }
 
   async function disconnectWallet() {
-    if (wallet) {
-      //need to maintain wallet state
+    if (!shortenAddress || !activeWallet) {
+      setShowUserDidNotConnect(true);
+
+      setTimeout(() => {
+        setShowUserDidNotConnect(false);
+      }, 5000);
+      return;
     }
+    disconnect(activeWallet);
     setUserAddress("");
+    setShortenedAddress("");
+    setHasQueried(false);
+    setResults([]);
+    setTokenDataObjects([]);
   }
 
   return (
@@ -141,16 +156,25 @@ function App() {
       )}
       <Box position="absolute" top="50" right="50">
         <Button
+          //isLoading
+          loadingText="Connecting"
           size="lg"
           colorScheme="teal"
           variant="outline"
           onClick={connectWallet}
+          isDisabled={isConnecting || Boolean(shortenedAddress)}
         >
           {shortenedAddress || "Connect Wallet"}
         </Button>
       </Box>
       <Box position="absolute" top="100" right="50">
-        <Button size="lg" colorScheme="teal" variant="outline">
+        <Button
+          size="lg"
+          colorScheme="teal"
+          variant="outline"
+          onClick={disconnectWallet}
+          isDisabled={!shortenedAddress}
+        >
           Disconnect Wallet
         </Button>
       </Box>
