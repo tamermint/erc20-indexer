@@ -17,8 +17,7 @@ import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
 import { configDotenv } from "dotenv";
 import { shortenAddress } from "thirdweb/utils";
-import { useConnect, useConnectModal, useActiveAccount } from "thirdweb/react";
-import { createWallet, injectedProvider } from "thirdweb/wallets";
+import { useConnectModal, useDisconnect } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
 
 function App() {
@@ -30,7 +29,8 @@ function App() {
   const [showCustomErrorAlert, setShowCustomErrorAlert] = useState(false);
   const [showUserDidNotConnect, setShowUserDidNotConnect] = useState(false);
   const [shortenedAddress, setShortenedAddress] = useState("");
-  const { connect, isConnecting, error } = useConnectModal();
+  const { connect, isConnecting } = useConnectModal();
+  const { disconnect } = useDisconnect();
 
   const client = createThirdwebClient({
     clientId: "99af623f39156b036e73c5b25a993162",
@@ -104,6 +104,14 @@ function App() {
       }, 5000);
     }
   }
+
+  async function disconnectWallet() {
+    if (wallet) {
+      //need to maintain wallet state
+    }
+    setUserAddress("");
+  }
+
   return (
     <Box w="100vw" h="100vh">
       {showUserDidNotConnect && (
@@ -137,9 +145,13 @@ function App() {
           colorScheme="teal"
           variant="outline"
           onClick={connectWallet}
-          disabled={isConnecting}
         >
           {shortenedAddress || "Connect Wallet"}
+        </Button>
+      </Box>
+      <Box position="absolute" top="100" right="50">
+        <Button size="lg" colorScheme="teal" variant="outline">
+          Disconnect Wallet
         </Button>
       </Box>
       <Center>
