@@ -16,9 +16,10 @@ import {
 import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
 import { configDotenv } from "dotenv";
-import { client } from "./client";
-import { useConnect } from "thirdweb/react";
+import { shortenAddress } from "thirdweb/utils";
+import { useConnect, useConnectModal, useActiveAccount } from "thirdweb/react";
 import { createWallet, injectedProvider } from "thirdweb/wallets";
+import { createThirdwebClient } from "thirdweb";
 
 function App() {
   const [userAddress, setUserAddress] = useState("");
@@ -27,7 +28,13 @@ function App() {
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
   const [showNoWalletAlert, setShowNoWalletAlert] = useState(false);
   const [showCustomErrorAlert, setShowCustomErrorAlert] = useState(false);
-  const { connect, isConnecting, error } = useConnect();
+  const [showUserDidNotConnect, setShowUserDidNotConnect] = useState(false);
+  const [shortenedAddress, setShortenedAddress] = useState("");
+  const { connect, isConnecting, error } = useConnectModal();
+
+  const client = createThirdwebClient({
+    clientId: "99af623f39156b036e73c5b25a993162",
+  });
 
   async function getTokenBalance() {
     const config = {
@@ -64,21 +71,48 @@ function App() {
       return;
     }
     try {
-      const wallet = createWallet(injectedProvider);
-      await wallet.connect({ client });
+      const wallet = await connect({ client });
+      console.log(wallet);
+      if (!wallet) {
+        setShowUserDidNotConnect(true);
+
+        setTimeout(() => {
+          setShowUserDidNotConnect(false);
+        }, 5000);
+        return;
+      }
+      const accountInfo = await wallet.getAccount();
+      const address = accountInfo?.address;
+      if (!address) {
+        setShowCustomErrorAlert(true);
+        setTimeout(() => {
+          setShowCustomErrorAlert(false);
+        }, 5000);
+      }
+      setUserAddress(address);
+      setShortenedAddress(shortenAddress(address));
+
       setShowNoWalletAlert(false);
       setShowCustomErrorAlert(false);
+      setShowUserDidNotConnect(false);
       return wallet;
     } catch (err) {
       setShowCustomErrorAlert(true);
       console.error(err); //log unexpector error to the console and make alert disappear
       setTimeout(() => {
         setShowCustomErrorAlert(false);
-      }, 3000);
+      }, 5000);
     }
   }
   return (
     <Box w="100vw" h="100vh">
+      {showUserDidNotConnect && (
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle>Wallet did not connect!</AlertTitle>
+          <AlertDescription>Please try again!</AlertDescription>
+        </Alert>
+      )}
       {showCustomErrorAlert && (
         <Alert status="error">
           <AlertIcon />
@@ -103,8 +137,9 @@ function App() {
           colorScheme="teal"
           variant="outline"
           onClick={connectWallet}
+          disabled={isConnecting}
         >
-          Connect Wallet
+          {shortenedAddress || "Connect Wallet"}
         </Button>
       </Box>
       <Center>
