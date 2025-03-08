@@ -15,7 +15,6 @@ import {
 } from "@chakra-ui/react";
 import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
-import { configDotenv } from "dotenv";
 import { shortenAddress } from "thirdweb/utils";
 import {
   useConnectModal,
@@ -24,29 +23,110 @@ import {
 } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
 
+/**
+ * A React component that displays a connect button, disconnect button,
+ * and allows querying for ERC-20 token balances on Ethereum mainnet.
+ *
+ * @function App
+ * @author Vivek Mitra
+ * @returns {JSX.Element} The rendered React component.
+ */
 function App() {
+  /**
+   * The address to check for token balances, or the connected wallet address if one is connected.
+   * @member {string} userAddress
+   * @type {string}
+   */
   const [userAddress, setUserAddress] = useState("");
+
+  /**
+   * Raw ERC-20 token balances returned by Alchemy.
+   * @member {Array<Object>} results
+   * @type {Array<Object>}
+   */
   const [results, setResults] = useState([]);
+
+  /**
+   * Whether the user has queried for ERC-20 token balances.
+   * @member {boolean} hasQueried
+   * @type {boolean}
+   */
   const [hasQueried, setHasQueried] = useState(false);
+
+  /**
+   * Array of token metadata objects from Alchemy (symbol, decimals, logo, etc.).
+   * @member {Array<Object>} tokenDataObjects
+   * @type {Array<Object>}
+   */
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
 
-  /**@notice Alerts to enhance UX and handle error flow and React's error boundaries */
-  const [showNoWalletAlert, setShowNoWalletAlert] = useState(false); // Show alert if no wallet is connected
-  const [showCustomErrorAlert, setShowCustomErrorAlert] = useState(false); // Show alert if an unexpected error occured and asks user to contact dev
-  const [showUserDidNotConnect, setShowUserDidNotConnect] = useState(false); // Show alert if user did not connect
+  /**
+   * Whether to show an alert indicating no wallet extension is installed.
+   * @member {boolean} showNoWalletAlert
+   * @type {boolean}
+   */
+  const [showNoWalletAlert, setShowNoWalletAlert] = useState(false);
 
-  /**@notice UI hook to shorten address */
-  const [shortenedAddress, setShortenedAddress] = useState(""); // shorten the wallet address so UI doesn't break
+  /**
+   * Whether to show an alert indicating an unexpected error occurred.
+   * @member {boolean} showCustomErrorAlert
+   * @type {boolean}
+   */
+  const [showCustomErrorAlert, setShowCustomErrorAlert] = useState(false);
 
-  /**@notice Wallet hooks to launch wallet connect modal, maintain active wallet for connecting and disconnecting wallet */
-  const { connect, isConnecting } = useConnectModal(); // launch wallet connect modal
-  const { disconnect } = useDisconnect(); // disconnect the active wallet
-  const activeWallet = useActiveWallet(); // maintain the active wallet
+  /**
+   * Whether to show an alert that the user canceled or did not connect a wallet.
+   * @member {boolean} showUserDidNotConnect
+   * @type {boolean}
+   */
+  const [showUserDidNotConnect, setShowUserDidNotConnect] = useState(false);
 
+  /**
+   * The shortened wallet address for UI display after connecting.
+   * @member {string} shortenedAddress
+   * @type {string}
+   */
+  const [shortenedAddress, setShortenedAddress] = useState("");
+
+  // thirdweb hooks
+  /**
+   * @member useConnectModal
+   * @description Implements ThirdWeb's React hook to connect the user to a wallet and opens the modal.
+   * @returns {Promise.<(Object|undefined)>} A wallet object
+   */
+  const { connect, isConnecting } = useConnectModal();
+
+  /**
+   * @member useDisconnect
+   * @description Disconnects the wallet.
+   * @returns {void}
+   */
+  const { disconnect } = useDisconnect();
+
+  /**
+   * @member useActiveWallet
+   * @description Returns active wallet connected to the dapp
+   * @returns {Promise.<(Object|undefined)>} A wallet Object
+   */
+  const activeWallet = useActiveWallet();
+
+  // Create thirdweb client
+  /**
+   * @function createThirdwebClient
+   * @description Creates a thirdweb client instance
+   * @returns {Promise.<(Object|undefined)>}
+   */
   const client = createThirdwebClient({
     clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID,
   });
 
+  /**
+   * Fetches and sets the user's ERC-20 token balances for the current `userAddress`.
+   *
+   * @async
+   * @function getTokenBalance
+   * @returns {Promise<void>} No direct return value, but updates component state.
+   */
   async function getTokenBalance() {
     const config = {
       apiKey: import.meta.env.VITE_ALCHEMY_API_KEY,
@@ -58,79 +138,78 @@ function App() {
 
     setResults(data);
 
-    const tokenDataPromises = [];
+    const tokenDataPromises = data.tokenBalances.map((tokenBalance) =>
+      alchemy.core.getTokenMetadata(tokenBalance.contractAddress)
+    );
+    const metadata = await Promise.all(tokenDataPromises);
 
-    for (let i = 0; i < data.tokenBalances.length; i++) {
-      const tokenData = alchemy.core.getTokenMetadata(
-        data.tokenBalances[i].contractAddress
-      );
-      tokenDataPromises.push(tokenData);
-    }
-
-    setTokenDataObjects(await Promise.all(tokenDataPromises));
+    setTokenDataObjects(metadata);
     setHasQueried(true);
   }
 
+  /**
+   * Opens the thirdweb connect modal. If a wallet is successfully connected,
+   * stores its address in state (both full and shortened).
+   *
+   * @async
+   * @function connectWallet
+   * @returns {Promise<Object|undefined>} The wallet object, or `undefined` if cancelled.
+   */
   async function connectWallet() {
     if (!window.ethereum) {
-      //if no wallet extension installed in browser, show an alert
       setShowNoWalletAlert(true);
-
-      //make it diappear after 3 s
       setTimeout(() => {
         setShowNoWalletAlert(false);
       }, 5000);
       return;
     }
     try {
-      const wallet = await connect({ client }); //launch connect modal
-      //if somehow wallet doesn't show up either due to connection problems, show alert
+      const wallet = await connect({ client });
       if (!wallet) {
         setShowUserDidNotConnect(true);
-        //make alert disappear after 5 s
         setTimeout(() => {
           setShowUserDidNotConnect(false);
         }, 5000);
         return;
       }
-      const accountInfo = await wallet.getAccount(); //get wallet object
-      const address = accountInfo?.address; //access the address attribute
-      if (!address) {
-        setShowCustomErrorAlert(true); //if address doesn't show up, ask user to contact dev
-        setTimeout(() => {
-          setShowCustomErrorAlert(false);
-        }, 5000);
-      }
-      setUserAddress(address); //otherwise, set user's address
-      setShortenedAddress(shortenAddress(address)); //get a shorter address to show on the UI
+      const accountInfo = await wallet.getAccount();
+      const address = accountInfo?.address;
 
-      //reset all other wallet states
+      if (!address) {
+        setShowCustomErrorAlert(true);
+        setTimeout(() => setShowCustomErrorAlert(false), 5000);
+        return;
+      }
+
+      setUserAddress(address);
+      setShortenedAddress(shortenAddress(address));
       setShowNoWalletAlert(false);
       setShowCustomErrorAlert(false);
       setShowUserDidNotConnect(false);
+
       return wallet;
     } catch (err) {
-      /**@Dev check error in console, if ultimately something doesn't connect - API exhaustion policy etc. */
       setShowCustomErrorAlert(true);
-      console.error(err); //log unexpector error to the console and make alert disappear
-      setTimeout(() => {
-        setShowCustomErrorAlert(false);
-      }, 5000);
+      console.error(err);
+      setTimeout(() => setShowCustomErrorAlert(false), 5000);
     }
   }
 
-  /**@notice disconnect wallet */
+  /**
+   * Disconnects the active wallet, if present, and resets local state.
+   *
+   * @async
+   * @function disconnectWallet
+   * @returns {Promise<void>}
+   */
   async function disconnectWallet() {
-    if (!shortenAddress || !activeWallet) {
-      //to make sure that wallet is conected before allowing disconnect
+    if (!shortenedAddress || !activeWallet) {
       setShowUserDidNotConnect(true);
-
       setTimeout(() => {
         setShowUserDidNotConnect(false);
       }, 5000);
       return;
     }
-    /**@notice disconnect wallet and clear local state */
     disconnect(activeWallet);
     setUserAddress("");
     setShortenedAddress("");
@@ -141,20 +220,17 @@ function App() {
 
   return (
     <Box w="100vw" h="100vh">
-      {
-        //implement ChakraUI's alert modals
-        showUserDidNotConnect && (
-          <Alert status="error">
-            <AlertIcon />
-            <AlertTitle>Wallet did not connect!</AlertTitle>
-            <AlertDescription>Please try again!</AlertDescription>
-          </Alert>
-        )
-      }
+      {showUserDidNotConnect && (
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle>Wallet did not connect!</AlertTitle>
+          <AlertDescription>Please try again!</AlertDescription>
+        </Alert>
+      )}
       {showCustomErrorAlert && (
         <Alert status="error">
           <AlertIcon />
-          <AlertTitle>Unexpected Error Occured!</AlertTitle>
+          <AlertTitle>Unexpected Error Occurred!</AlertTitle>
           <AlertDescription>
             Please contact support - tamermint@github
           </AlertDescription>
@@ -169,9 +245,9 @@ function App() {
           </AlertDescription>
         </Alert>
       )}
+
       <Box position="absolute" top="50" right="50">
         <Button
-          //check against whether wallet is already connected
           loadingText="Connecting"
           size="lg"
           colorScheme="teal"
@@ -184,7 +260,6 @@ function App() {
       </Box>
       <Box position="absolute" top="100" right="50">
         <Button
-          //check against whether wallet is connected before disconnecting
           size="lg"
           colorScheme="teal"
           variant="outline"
@@ -196,9 +271,9 @@ function App() {
       </Box>
       <Center>
         <Flex
-          alignItems={"center"}
+          alignItems="center"
           justifyContent="center"
-          flexDirection={"column"}
+          flexDirection="column"
         >
           <Heading m="50" size="2xl">
             ERC-20 Token Indexer
@@ -213,7 +288,7 @@ function App() {
         w="100%"
         flexDirection="column"
         alignItems="center"
-        justifyContent={"center"}
+        justifyContent="center"
       >
         <Heading mt={10} mb={10}>
           Get all the ERC-20 token balances of this address:
@@ -239,30 +314,28 @@ function App() {
         </Button>
         <Heading my={20}>ERC-20 token balances:</Heading>
         {hasQueried ? (
-          <SimpleGrid w={"90vw"} columns={4} spacing={24}>
-            {results.tokenBalances.map((e, i) => {
-              return (
-                <Flex
-                  flexDir={"column"}
-                  color="white"
-                  bg="blue"
-                  w={"20vw"}
-                  key={e.id}
-                >
-                  <Box>
-                    <b>Symbol:</b> ${tokenDataObjects[i].symbol}&nbsp;
-                  </Box>
-                  <Box>
-                    <b>Balance:</b>&nbsp;
-                    {Utils.formatUnits(
-                      e.tokenBalance,
-                      tokenDataObjects[i].decimals
-                    )}
-                  </Box>
-                  <Image src={tokenDataObjects[i].logo} />
-                </Flex>
-              );
-            })}
+          <SimpleGrid w="90vw" columns={4} spacing={24}>
+            {results.tokenBalances.map((tokenBalance, i) => (
+              <Flex
+                flexDir="column"
+                color="white"
+                bg="blue"
+                w="20vw"
+                key={`${tokenBalance.contractAddress}-${i}`}
+              >
+                <Box>
+                  <b>Symbol:</b> {tokenDataObjects[i].symbol}
+                </Box>
+                <Box>
+                  <b>Balance:</b>{" "}
+                  {Utils.formatUnits(
+                    tokenBalance.tokenBalance,
+                    tokenDataObjects[i].decimals
+                  )}
+                </Box>
+                <Image src={tokenDataObjects[i].logo} alt="Token Logo" />
+              </Flex>
+            ))}
           </SimpleGrid>
         ) : (
           "Please make a query! This may take a few seconds..."
