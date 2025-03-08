@@ -1,4 +1,8 @@
 import {
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
   Box,
   Button,
   Center,
@@ -21,6 +25,8 @@ function App() {
   const [results, setResults] = useState([]);
   const [hasQueried, setHasQueried] = useState(false);
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
+  const [showNoWalletAlert, setShowNoWalletAlert] = useState(false);
+  const [showCustomErrorAlert, setShowCustomErrorAlert] = useState(false);
   const { connect, isConnecting, error } = useConnect();
 
   async function getTokenBalance() {
@@ -47,23 +53,50 @@ function App() {
     setHasQueried(true);
   }
 
-  function connectWallet() {
+  async function connectWallet() {
     if (!window.ethereum) {
-      alert("Please install a wallet!");
+      setShowNoWalletAlert(true);
+
+      //make it diappear after 3 s
+      setTimeout(() => {
+        setShowNoWalletAlert(false);
+      }, 5000);
       return;
     }
     try {
-      connect(async () => {
-        const wallet = await createWallet(injectedProvider);
-        await wallet.connect({ client });
-        return wallet;
-      });
-    } catch {
-      alert("Error connecting wallet");
+      const wallet = createWallet(injectedProvider);
+      await wallet.connect({ client });
+      setShowNoWalletAlert(false);
+      setShowCustomErrorAlert(false);
+      return wallet;
+    } catch (err) {
+      setShowCustomErrorAlert(true);
+      console.error(err); //log unexpector error to the console and make alert disappear
+      setTimeout(() => {
+        setShowCustomErrorAlert(false);
+      }, 3000);
     }
   }
   return (
     <Box w="100vw" h="100vh">
+      {showCustomErrorAlert && (
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle>Unexpected Error Occured!</AlertTitle>
+          <AlertDescription>
+            Please contact support - tamermint@github
+          </AlertDescription>
+        </Alert>
+      )}
+      {showNoWalletAlert && (
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle>You do not have a wallet installed!</AlertTitle>
+          <AlertDescription>
+            Please install Metamask or Coinbase Wallet
+          </AlertDescription>
+        </Alert>
+      )}
       <Box position="absolute" top="50" right="50">
         <Button
           size="lg"
