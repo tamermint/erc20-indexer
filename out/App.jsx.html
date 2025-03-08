@@ -1,4 +1,32 @@
-import {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: App.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: App.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import {
   Alert,
   AlertIcon,
   AlertTitle,
@@ -60,7 +88,7 @@ function App() {
 
     const tokenDataPromises = [];
 
-    for (let i = 0; i < data.tokenBalances.length; i++) {
+    for (let i = 0; i &lt; data.tokenBalances.length; i++) {
       const tokenData = alchemy.core.getTokenMetadata(
         data.tokenBalances[i].contractAddress
       );
@@ -140,37 +168,37 @@ function App() {
   }
 
   return (
-    <Box w="100vw" h="100vh">
+    &lt;Box w="100vw" h="100vh">
       {
         //implement ChakraUI's alert modals
-        showUserDidNotConnect && (
-          <Alert status="error">
-            <AlertIcon />
-            <AlertTitle>Wallet did not connect!</AlertTitle>
-            <AlertDescription>Please try again!</AlertDescription>
-          </Alert>
+        showUserDidNotConnect &amp;&amp; (
+          &lt;Alert status="error">
+            &lt;AlertIcon />
+            &lt;AlertTitle>Wallet did not connect!&lt;/AlertTitle>
+            &lt;AlertDescription>Please try again!&lt;/AlertDescription>
+          &lt;/Alert>
         )
       }
-      {showCustomErrorAlert && (
-        <Alert status="error">
-          <AlertIcon />
-          <AlertTitle>Unexpected Error Occured!</AlertTitle>
-          <AlertDescription>
+      {showCustomErrorAlert &amp;&amp; (
+        &lt;Alert status="error">
+          &lt;AlertIcon />
+          &lt;AlertTitle>Unexpected Error Occured!&lt;/AlertTitle>
+          &lt;AlertDescription>
             Please contact support - tamermint@github
-          </AlertDescription>
-        </Alert>
+          &lt;/AlertDescription>
+        &lt;/Alert>
       )}
-      {showNoWalletAlert && (
-        <Alert status="error">
-          <AlertIcon />
-          <AlertTitle>You do not have a wallet installed!</AlertTitle>
-          <AlertDescription>
+      {showNoWalletAlert &amp;&amp; (
+        &lt;Alert status="error">
+          &lt;AlertIcon />
+          &lt;AlertTitle>You do not have a wallet installed!&lt;/AlertTitle>
+          &lt;AlertDescription>
             Please install Metamask or Coinbase Wallet
-          </AlertDescription>
-        </Alert>
+          &lt;/AlertDescription>
+        &lt;/Alert>
       )}
-      <Box position="absolute" top="50" right="50">
-        <Button
+      &lt;Box position="absolute" top="50" right="50">
+        &lt;Button
           //check against whether wallet is already connected
           loadingText="Connecting"
           size="lg"
@@ -180,10 +208,10 @@ function App() {
           isDisabled={isConnecting || Boolean(shortenedAddress)}
         >
           {shortenedAddress || "Connect Wallet"}
-        </Button>
-      </Box>
-      <Box position="absolute" top="100" right="50">
-        <Button
+        &lt;/Button>
+      &lt;/Box>
+      &lt;Box position="absolute" top="100" right="50">
+        &lt;Button
           //check against whether wallet is connected before disconnecting
           size="lg"
           colorScheme="teal"
@@ -192,33 +220,33 @@ function App() {
           isDisabled={!shortenedAddress}
         >
           Disconnect Wallet
-        </Button>
-      </Box>
-      <Center>
-        <Flex
+        &lt;/Button>
+      &lt;/Box>
+      &lt;Center>
+        &lt;Flex
           alignItems={"center"}
           justifyContent="center"
           flexDirection={"column"}
         >
-          <Heading m="50" size="2xl">
+          &lt;Heading m="50" size="2xl">
             ERC-20 Token Indexer
-          </Heading>
-          <Text>
+          &lt;/Heading>
+          &lt;Text>
             Plug in an address and this website will return all of its ERC-20
             token balances!
-          </Text>
-        </Flex>
-      </Center>
-      <Flex
+          &lt;/Text>
+        &lt;/Flex>
+      &lt;/Center>
+      &lt;Flex
         w="100%"
         flexDirection="column"
         alignItems="center"
         justifyContent={"center"}
       >
-        <Heading mt={10} mb={10}>
+        &lt;Heading mt={10} mb={10}>
           Get all the ERC-20 token balances of this address:
-        </Heading>
-        <Input
+        &lt;/Heading>
+        &lt;Input
           onChange={(e) => setUserAddress(e.target.value)}
           color="black"
           w="600px"
@@ -227,7 +255,7 @@ function App() {
           bgColor="white"
           fontSize={24}
         />
-        <Button
+        &lt;Button
           fontSize={20}
           size="lg"
           colorScheme="teal"
@@ -236,40 +264,63 @@ function App() {
           mt={10}
         >
           Check ERC-20 Token Balances
-        </Button>
-        <Heading my={20}>ERC-20 token balances:</Heading>
+        &lt;/Button>
+        &lt;Heading my={20}>ERC-20 token balances:&lt;/Heading>
         {hasQueried ? (
-          <SimpleGrid w={"90vw"} columns={4} spacing={24}>
+          &lt;SimpleGrid w={"90vw"} columns={4} spacing={24}>
             {results.tokenBalances.map((e, i) => {
               return (
-                <Flex
+                &lt;Flex
                   flexDir={"column"}
                   color="white"
                   bg="blue"
                   w={"20vw"}
                   key={e.id}
                 >
-                  <Box>
-                    <b>Symbol:</b> ${tokenDataObjects[i].symbol}&nbsp;
-                  </Box>
-                  <Box>
-                    <b>Balance:</b>&nbsp;
+                  &lt;Box>
+                    &lt;b>Symbol:&lt;/b> ${tokenDataObjects[i].symbol}&amp;nbsp;
+                  &lt;/Box>
+                  &lt;Box>
+                    &lt;b>Balance:&lt;/b>&amp;nbsp;
                     {Utils.formatUnits(
                       e.tokenBalance,
                       tokenDataObjects[i].decimals
                     )}
-                  </Box>
-                  <Image src={tokenDataObjects[i].logo} />
-                </Flex>
+                  &lt;/Box>
+                  &lt;Image src={tokenDataObjects[i].logo} />
+                &lt;/Flex>
               );
             })}
-          </SimpleGrid>
+          &lt;/SimpleGrid>
         ) : (
           "Please make a query! This may take a few seconds..."
         )}
-      </Flex>
-    </Box>
+      &lt;/Flex>
+    &lt;/Box>
   );
 }
 
 export default App;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Mar 09 2025 07:50:25 GMT+1100 (Australian Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

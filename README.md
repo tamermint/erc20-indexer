@@ -26,3 +26,20 @@ Here are a few challenge suggestions:
 7. There are ways to make this app faster... can you implement some of them? How can the query be made _even_ quicker?
 8. Can you add ENS support for inputs?
 9. Completely open-ended!! Use this as the base for your next hackathon project, dream company or personal expedition :)
+
+## Documentation
+
+- `connectWallet()` implements ThirdWeb's React SDK uses the wallet connect modal to allow users to connect to any of the [supported wallets](https://portal.thirdweb.com/typescript/v5/supported-wallets)
+
+- `disconnectWallet()` implements ThirdWeb's React SDK to disconnect the active wallet via `useActiveWallet()` and `useDisconnect()` hooks
+
+- The following state hooks are used to maintain UX :
+  ```jsx
+  const [showNoWalletAlert, setShowNoWalletAlert] = useState(false); // Show alert if no wallet is connected
+  const [showCustomErrorAlert, setShowCustomErrorAlert] = useState(false); // Show alert if an unexpected error occured and asks user to contact dev
+  const [showUserDidNotConnect, setShowUserDidNotConnect] = useState(false); // Show alert if user did not connect
+  const [shortenedAddress, setShortenedAddress] = useState(""); // shorten the wallet address so UI doesn't break
+  const { connect, isConnecting } = useConnectModal(); // launch wallet connect modal
+  const { disconnect } = useDisconnect(); // disconnect the active wallet
+  const activeWallet = useActiveWallet(); // maintain the active wallet
+  ```
