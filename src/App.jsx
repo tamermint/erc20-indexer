@@ -10,8 +10,9 @@ import {
   Heading,
   Image,
   Input,
-  SimpleGrid,
+  Grid,
   Text,
+  GridItem,
 } from "@chakra-ui/react";
 import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
@@ -219,7 +220,7 @@ function App() {
   }
 
   return (
-    <Box w="100vw" h="100vh">
+    <Box w="100vw" h="auto">
       {showUserDidNotConnect && (
         <Alert status="error">
           <AlertIcon />
@@ -245,101 +246,135 @@ function App() {
           </AlertDescription>
         </Alert>
       )}
-
-      <Box position="absolute" top="50" right="50">
-        <Button
-          loadingText="Connecting"
-          size="lg"
-          colorScheme="teal"
-          variant="outline"
-          onClick={connectWallet}
-          isDisabled={isConnecting || Boolean(shortenedAddress)}
-        >
-          {shortenedAddress || "Connect Wallet"}
-        </Button>
-      </Box>
-      <Box position="absolute" top="100" right="50">
-        <Button
-          size="lg"
-          colorScheme="teal"
-          variant="outline"
-          onClick={disconnectWallet}
-          isDisabled={!shortenedAddress}
-        >
-          Disconnect Wallet
-        </Button>
-      </Box>
-      <Center>
+      <Flex direction="column" maxWidth="500vw">
+        <Box position="absolute" top="50" right="50">
+          <Button
+            loadingText="Connecting"
+            size="lg"
+            mr="3"
+            colorScheme="teal"
+            variant="outline"
+            textAlign={["center"]}
+            onClick={connectWallet}
+            isDisabled={isConnecting || Boolean(shortenedAddress)}
+          >
+            {shortenedAddress || "Connect Wallet"}
+          </Button>
+        </Box>
+        <Box position="absolute" top="100" right="50">
+          <Button
+            size="lg"
+            colorScheme="teal"
+            variant="outline"
+            onClick={disconnectWallet}
+            isDisabled={!shortenedAddress}
+          >
+            Disconnect Wallet
+          </Button>
+        </Box>
+        <Center>
+          <Flex
+            alignItems="center"
+            justifyContent="center"
+            flexDirection="column"
+          >
+            <Heading m="50" size="2xl">
+              ERC-20 Token Indexer
+            </Heading>
+            <Text>
+              Plug in an address and this website will return all of its ERC-20
+              token balances!
+            </Text>
+          </Flex>
+        </Center>
         <Flex
+          w="100%"
+          flexDirection="column"
           alignItems="center"
           justifyContent="center"
-          flexDirection="column"
+          justifyItems="center"
         >
-          <Heading m="50" size="2xl">
-            ERC-20 Token Indexer
+          <Heading mt={10} mb={10}>
+            Get all the ERC-20 token balances of this address:
           </Heading>
-          <Text>
-            Plug in an address and this website will return all of its ERC-20
-            token balances!
-          </Text>
+          <Input
+            onChange={(e) => setUserAddress(e.target.value)}
+            color="black"
+            w="600px"
+            textAlign="center"
+            p={4}
+            bgColor="white"
+            fontSize={24}
+          />
+          <Button
+            fontSize={20}
+            size="lg"
+            colorScheme="teal"
+            variant="outline"
+            onClick={getTokenBalance}
+            mt={10}
+          >
+            Check ERC-20 Token Balances
+          </Button>
+          <Heading my={20}>ERC-20 token balances:</Heading>
+          {hasQueried ? (
+            <Grid
+              templateColumns="repeat(4, 1fr)"
+              gap={8}
+              //ml="100"
+              maxWidth="250vw"
+            >
+              {results.tokenBalances.map((tokenBalance, i) => (
+                <GridItem
+                  color="black"
+                  bg="white"
+                  key={`${tokenBalance.contractAddress}-${i}`}
+                >
+                  <Box
+                    overflow="hidden"
+                    borderWidth="2px"
+                    borderRadius="lg"
+                    borderColor="teal"
+                    display="flex"
+                    color="teal"
+                    flexDirection="column"
+                    justifyContent="center"
+                    alignItems="center"
+                    gap="5px"
+                    w="200px"
+                    h="200px"
+                    p="6"
+                  >
+                    <Box>
+                      <b>Symbol:</b> {tokenDataObjects[i].symbol}
+                    </Box>
+                    <Box
+                      maxW="150px"
+                      whiteSpace="nowrap"
+                      overflow="hidden"
+                      textOverflow="ellipsis"
+                    >
+                      <b>Balance:</b>{" "}
+                      {Utils.formatUnits(
+                        tokenBalance.tokenBalance,
+                        tokenDataObjects[i].decimals
+                      )}
+                    </Box>
+                    <Image
+                      boxSize="50px"
+                      borderRadius="full"
+                      src={tokenDataObjects[i].logo}
+                      alt="Token Logo"
+                      fallbackSrc="https://static-00.iconduck.com/assets.00/generic-cryptocurrency-icon-512x508-icecu3wp.png"
+                    />
+                  </Box>
+                </GridItem>
+              ))}
+            </Grid>
+          ) : (
+            "Please make a query! This may take a few seconds..."
+          )}
         </Flex>
-      </Center>
-      <Flex
-        w="100%"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Heading mt={10} mb={10}>
-          Get all the ERC-20 token balances of this address:
-        </Heading>
-        <Input
-          onChange={(e) => setUserAddress(e.target.value)}
-          color="black"
-          w="600px"
-          textAlign="center"
-          p={4}
-          bgColor="white"
-          fontSize={24}
-        />
-        <Button
-          fontSize={20}
-          size="lg"
-          colorScheme="teal"
-          variant="outline"
-          onClick={getTokenBalance}
-          mt={10}
-        >
-          Check ERC-20 Token Balances
-        </Button>
-        <Heading my={20}>ERC-20 token balances:</Heading>
-        {hasQueried ? (
-          <SimpleGrid w="90vw" columns={4} spacing={24}>
-            {results.tokenBalances.map((tokenBalance, i) => (
-              <Flex
-                flexDir="column"
-                color="white"
-                bg="blue"
-                w="20vw"
-                key={`${tokenBalance.contractAddress}-${i}`}
-              >
-                <Box>
-                  <b>Symbol:</b> {tokenDataObjects[i].symbol}
-                </Box>
-                <Box>
-                  <b>Balance:</b>{" "}
-                  {Utils.formatUnits(
-                    tokenBalance.tokenBalance,
-                    tokenDataObjects[i].decimals
-                  )}
-                </Box>
-                <Image src={tokenDataObjects[i].logo} alt="Token Logo" />
-              </Flex>
-            ))}
-          </SimpleGrid>
-        ) : (
-          "Please make a query! This may take a few seconds..."
-        )}
       </Flex>
     </Box>
   );
