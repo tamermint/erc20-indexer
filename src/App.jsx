@@ -6,20 +6,16 @@ import {
   Box,
   Button,
   Center,
-  DarkMode,
   Flex,
   GridItem,
   Grid,
-  GlobalStyle,
   Heading,
   Image,
   Input,
-  Text,
-  LightMode,
 } from "@chakra-ui/react";
 import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
-import { shortenAddress } from "thirdweb/utils";
+import { isAddress, shortenAddress } from "thirdweb/utils";
 import {
   useConnectModal,
   useDisconnect,
@@ -85,6 +81,8 @@ function App() {
    */
   const [showUserDidNotConnect, setShowUserDidNotConnect] = useState(false);
 
+  const [invalidUserAddress, setInvalidUserAddress] = useState(false);
+
   /**
    * The shortened wallet address for UI display after connecting.
    * @member {string} shortenedAddress
@@ -138,17 +136,58 @@ function App() {
     };
 
     const alchemy = new Alchemy(config);
-    const data = await alchemy.core.getTokenBalances(userAddress);
 
-    setResults(data);
+    if (!isAddress(userAddress)) {
+      setInvalidUserAddress(true);
+      setTimeout(() => {
+        setInvalidUserAddress(false);
+      }, 5000);
+      return;
+    }
 
-    const tokenDataPromises = data.tokenBalances.map((tokenBalance) =>
+    if (!userAddress) {
+      setInvalidUserAddress(true);
+      setTimeout(() => {
+        setInvalidUserAddress(false);
+      }, 5000);
+      return;
+    }
+
+    const rawData = await alchemy.core.getTokenBalances(userAddress);
+    const filtered = rawData.tokenBalances.filter(
+      (t) => parseInt(t.tokenBalance, 16) > 0
+    );
+    console.log(filtered);
+
+    setResults({ tokenBalances: filtered });
+
+    const tokenDataPromises = filtered.map((tokenBalance) =>
       alchemy.core.getTokenMetadata(tokenBalance.contractAddress)
     );
     const metadata = await Promise.all(tokenDataPromises);
 
     setTokenDataObjects(metadata);
     setHasQueried(true);
+  }
+
+  async function getOwnBalance() {
+    if (!shortenedAddress || !activeWallet) {
+      setShowUserDidNotConnect(true);
+      setTimeout(() => {
+        setShowUserDidNotConnect(false);
+      }, 5000);
+      return;
+    }
+    if (!userAddress) {
+      setShowCustomErrorAlert(true);
+      setTimeout(() => setShowCustomErrorAlert(false), 5000);
+      return;
+    }
+    setShowUserDidNotConnect(false);
+    setShowCustomErrorAlert(false);
+    setShowNoWalletAlert(false);
+
+    await getTokenBalance();
   }
 
   /**
@@ -231,15 +270,40 @@ function App() {
       scrollPadding="-0.5"
       backgroundColor="black"
     >
+      {invalidUserAddress && (
+        <Alert
+          flexDirection="row"
+          justifyContent="center"
+          textAlign="center"
+          backgroundColor="black"
+          status="error"
+        >
+          <AlertIcon />
+          <AlertTitle>Address is Missing or Invalid!</AlertTitle>
+          <AlertDescription>Please try again!</AlertDescription>
+        </Alert>
+      )}
       {showUserDidNotConnect && (
-        <Alert status="error">
+        <Alert
+          flexDirection="row"
+          justifyContent="center"
+          textAlign="center"
+          backgroundColor="black"
+          status="error"
+        >
           <AlertIcon />
           <AlertTitle>Wallet did not connect!</AlertTitle>
           <AlertDescription>Please try again!</AlertDescription>
         </Alert>
       )}
       {showCustomErrorAlert && (
-        <Alert status="error">
+        <Alert
+          flexDirection="row"
+          justifyContent="center"
+          textAlign="center"
+          backgroundColor="black"
+          status="error"
+        >
           <AlertIcon />
           <AlertTitle>Unexpected Error Occurred!</AlertTitle>
           <AlertDescription>
@@ -248,7 +312,13 @@ function App() {
         </Alert>
       )}
       {showNoWalletAlert && (
-        <Alert status="error">
+        <Alert
+          flexDirection="row"
+          justifyContent="center"
+          textAlign="center"
+          backgroundColor="black"
+          status="error"
+        >
           <AlertIcon />
           <AlertTitle>You do not have a wallet installed!</AlertTitle>
           <AlertDescription>
@@ -307,15 +377,15 @@ function App() {
           <Input
             onChange={(e) => setUserAddress(e.target.value)}
             variant="outline"
-            borderColor="teal"
-            color="black"
+            borderColor="teal.300"
+            color="teal.300"
             w="600px"
             placeholder="Plug in address here"
-            _placeholder={{ opacity: 0.4, color: "teal.600" }}
-            focusBorderColor="teal.500"
+            _placeholder={{ opacity: 0.4, color: "teal.300" }}
+            focusBorderColor="teal.300"
             textAlign="center"
             p={4}
-            bgColor="white"
+            bgColor="black"
             fontSize={24}
           />
           <Button
@@ -334,19 +404,14 @@ function App() {
             size="lg"
             colorScheme="teal.300"
             variant="outline"
-            //onClick={}
+            onClick={getOwnBalance}
             mt={10}
           >
             Check Your Own ERC-20 Balances
           </Button>
           <Heading my={20}>ERC-20 token balances:</Heading>
           {hasQueried ? (
-            <Grid
-              templateColumns="repeat(4, 1fr)"
-              gap={8}
-              //ml="100"
-              maxWidth="250vw"
-            >
+            <Grid templateColumns="repeat(4, 1fr)" gap={8} maxWidth="250vw">
               {results.tokenBalances.map((tokenBalance, i) => (
                 <GridItem
                   color="teal.300"
