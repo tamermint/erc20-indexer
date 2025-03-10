@@ -220,7 +220,7 @@ function App() {
   }
 
   return (
-    <Box w="100vw" h="auto">
+    <Box w="100vw" h="auto" color="teal.800">
       {showUserDidNotConnect && (
         <Alert status="error">
           <AlertIcon />
@@ -251,7 +251,7 @@ function App() {
           <Button
             loadingText="Connecting"
             size="lg"
-            mr="3"
+            px="9"
             colorScheme="teal"
             variant="outline"
             textAlign={["center"]}
@@ -266,6 +266,7 @@ function App() {
             size="lg"
             colorScheme="teal"
             variant="outline"
+            mt="5"
             onClick={disconnectWallet}
             isDisabled={!shortenedAddress}
           >
@@ -299,8 +300,13 @@ function App() {
           </Heading>
           <Input
             onChange={(e) => setUserAddress(e.target.value)}
+            variant="outline"
+            borderColor="teal"
             color="black"
             w="600px"
+            placeholder="Plug in address here"
+            _placeholder={{ opacity: 0.4, color: "teal.600" }}
+            focusBorderColor="teal.500"
             textAlign="center"
             p={4}
             bgColor="white"
@@ -313,8 +319,19 @@ function App() {
             variant="outline"
             onClick={getTokenBalance}
             mt={10}
+            px="10"
           >
             Check ERC-20 Token Balances
+          </Button>
+          <Button
+            fontSize={20}
+            size="lg"
+            colorScheme="teal"
+            variant="outline"
+            //onClick={}
+            mt={10}
+          >
+            Check Your Own ERC-20 Balances
           </Button>
           <Heading my={20}>ERC-20 token balances:</Heading>
           {hasQueried ? (
