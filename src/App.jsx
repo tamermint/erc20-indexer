@@ -6,13 +6,16 @@ import {
   Box,
   Button,
   Center,
+  DarkMode,
   Flex,
+  GridItem,
+  Grid,
+  GlobalStyle,
   Heading,
   Image,
   Input,
-  Grid,
   Text,
-  GridItem,
+  LightMode,
 } from "@chakra-ui/react";
 import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
@@ -220,7 +223,14 @@ function App() {
   }
 
   return (
-    <Box w="100vw" h="auto" color="teal.800">
+    <Box
+      w="100vw"
+      h="auto"
+      color="teal.300"
+      scrollBehavior="smooth"
+      scrollPadding="-0.5"
+      backgroundColor="black"
+    >
       {showUserDidNotConnect && (
         <Alert status="error">
           <AlertIcon />
@@ -252,7 +262,7 @@ function App() {
             loadingText="Connecting"
             size="lg"
             px="9"
-            colorScheme="teal"
+            colorScheme="teal.300"
             variant="outline"
             textAlign={["center"]}
             onClick={connectWallet}
@@ -264,7 +274,7 @@ function App() {
         <Box position="absolute" top="100" right="50">
           <Button
             size="lg"
-            colorScheme="teal"
+            colorScheme="teal.300"
             variant="outline"
             mt="5"
             onClick={disconnectWallet}
@@ -282,10 +292,6 @@ function App() {
             <Heading m="50" size="2xl">
               ERC-20 Token Indexer
             </Heading>
-            <Text>
-              Plug in an address and this website will return all of its ERC-20
-              token balances!
-            </Text>
           </Flex>
         </Center>
         <Flex
@@ -315,7 +321,7 @@ function App() {
           <Button
             fontSize={20}
             size="lg"
-            colorScheme="teal"
+            colorScheme="teal.300"
             variant="outline"
             onClick={getTokenBalance}
             mt={10}
@@ -326,7 +332,7 @@ function App() {
           <Button
             fontSize={20}
             size="lg"
-            colorScheme="teal"
+            colorScheme="teal.300"
             variant="outline"
             //onClick={}
             mt={10}
@@ -343,17 +349,17 @@ function App() {
             >
               {results.tokenBalances.map((tokenBalance, i) => (
                 <GridItem
-                  color="black"
-                  bg="white"
+                  color="teal.300"
+                  bg="black"
                   key={`${tokenBalance.contractAddress}-${i}`}
                 >
                   <Box
                     overflow="hidden"
                     borderWidth="2px"
                     borderRadius="lg"
-                    borderColor="teal"
+                    borderColor="teal.300"
                     display="flex"
-                    color="teal"
+                    color="teal.300"
                     flexDirection="column"
                     justifyContent="center"
                     alignItems="center"
