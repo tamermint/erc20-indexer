@@ -23,6 +23,7 @@ import {
   useActiveWallet,
 } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
+import { BigNumber, utils } from "ethers";
 
 /**
  * A React component that displays a connect button, disconnect button,
@@ -156,7 +157,6 @@ function App() {
     }
 
     const rawData = await alchemy.core.getTokenBalances(userAddress);
-    console.log(rawData.tokenBalances);
     const filtered = rawData.tokenBalances.filter(
       (t) => parseInt(t.tokenBalance, 16) > 0
     );
@@ -459,11 +459,13 @@ function App() {
                         overflow="hidden"
                         textOverflow="ellipsis"
                       >
-                        <b>Balance:</b>{" "}
-                        {Utils.formatUnits(
-                          tokenBalance.tokenBalance,
-                          tokenDataObjects[i].decimals
-                        )}
+                        <b>Balance: </b>
+                        {parseFloat(
+                          Utils.formatUnits(
+                            tokenBalance.tokenBalance,
+                            tokenDataObjects[i].decimals
+                          )
+                        ).toFixed(4)}
                       </Box>
                       <Image
                         boxSize="50px"
