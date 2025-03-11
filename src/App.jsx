@@ -12,6 +12,7 @@ import {
   Heading,
   Image,
   Input,
+  Text,
 } from "@chakra-ui/react";
 import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
@@ -123,11 +124,12 @@ function App() {
   });
 
   /**
-   * Fetches and sets the user's ERC-20 token balances for the current `userAddress`.
+   * Fetches and sets the ERC-20 token balances for the current `userAddress` value. This value is the entered value of any address. Ignores tokens with zero balance
    *
    * @async
    * @function getTokenBalance
    * @returns {Promise<void>} No direct return value, but updates component state.
+   *
    */
   async function getTokenBalance() {
     const config = {
@@ -157,9 +159,9 @@ function App() {
     const filtered = rawData.tokenBalances.filter(
       (t) => parseInt(t.tokenBalance, 16) > 0
     );
-    console.log(filtered);
 
     setResults({ tokenBalances: filtered });
+    console.log(results);
 
     const tokenDataPromises = filtered.map((tokenBalance) =>
       alchemy.core.getTokenMetadata(tokenBalance.contractAddress)
@@ -169,6 +171,14 @@ function App() {
     setTokenDataObjects(metadata);
     setHasQueried(true);
   }
+  /**
+   * Fetches and sets the ERC-20 token balances for the current `userAddress` value. This is the address of the wallet connmected to the app. Ignores tokens with zero balance
+   *
+   * @async
+   * @function getOwnBalance
+   * @returns {Promise<void>} No direct return value, but updates component state.
+   *
+   */
 
   async function getOwnBalance() {
     if (!shortenedAddress || !activeWallet) {
@@ -260,6 +270,11 @@ function App() {
     setResults([]);
     setTokenDataObjects([]);
   }
+  /**
+   * @description The returned value of the App function
+   * @returns {JSX.Element}
+   * @description rendered element depends on state hooks to ensure consistent UX
+   */
 
   return (
     <Box
@@ -410,57 +425,69 @@ function App() {
             Check Your Own ERC-20 Balances
           </Button>
           <Heading my={20}>ERC-20 token balances:</Heading>
+          {/*If user has queried and there are no nonzero token balances */}
           {hasQueried ? (
-            <Grid templateColumns="repeat(4, 1fr)" gap={8} maxWidth="250vw">
-              {results.tokenBalances.map((tokenBalance, i) => (
-                <GridItem
-                  color="teal.300"
-                  bg="black"
-                  key={`${tokenBalance.contractAddress}-${i}`}
-                >
-                  <Box
-                    overflow="hidden"
-                    borderWidth="2px"
-                    borderRadius="lg"
-                    borderColor="teal.300"
-                    display="flex"
+            results.tokenBalances && results.length > 0 ? (
+              <Grid templateColumns="repeat(4, 1fr)" gap={8} maxWidth="250vw">
+                {results.tokenBalances.map((tokenBalance, i) => (
+                  <GridItem
                     color="teal.300"
-                    flexDirection="column"
-                    justifyContent="center"
-                    alignItems="center"
-                    gap="5px"
-                    w="200px"
-                    h="200px"
-                    p="6"
+                    bg="black"
+                    key={`${tokenBalance.contractAddress}-${i}`}
                   >
-                    <Box>
-                      <b>Symbol:</b> {tokenDataObjects[i].symbol}
-                    </Box>
                     <Box
-                      maxW="150px"
-                      whiteSpace="nowrap"
                       overflow="hidden"
-                      textOverflow="ellipsis"
+                      borderWidth="2px"
+                      borderRadius="lg"
+                      borderColor="teal.300"
+                      display="flex"
+                      color="teal.300"
+                      flexDirection="column"
+                      justifyContent="center"
+                      alignItems="center"
+                      gap="5px"
+                      w="200px"
+                      h="200px"
+                      p="6"
                     >
-                      <b>Balance:</b>{" "}
-                      {Utils.formatUnits(
-                        tokenBalance.tokenBalance,
-                        tokenDataObjects[i].decimals
-                      )}
+                      <Box>
+                        <b>Symbol:</b> {tokenDataObjects[i].symbol}
+                      </Box>
+                      <Box
+                        maxW="150px"
+                        whiteSpace="nowrap"
+                        overflow="hidden"
+                        textOverflow="ellipsis"
+                      >
+                        <b>Balance:</b>{" "}
+                        {Utils.formatUnits(
+                          tokenBalance.tokenBalance,
+                          tokenDataObjects[i].decimals
+                        )}
+                      </Box>
+                      <Image
+                        boxSize="50px"
+                        borderRadius="full"
+                        src={tokenDataObjects[i].logo}
+                        alt="Token Logo"
+                        fallbackSrc="https://static-00.iconduck.com/assets.00/generic-cryptocurrency-icon-512x508-icecu3wp.png"
+                      />
                     </Box>
-                    <Image
-                      boxSize="50px"
-                      borderRadius="full"
-                      src={tokenDataObjects[i].logo}
-                      alt="Token Logo"
-                      fallbackSrc="https://static-00.iconduck.com/assets.00/generic-cryptocurrency-icon-512x508-icecu3wp.png"
-                    />
-                  </Box>
-                </GridItem>
-              ))}
-            </Grid>
+                  </GridItem>
+                ))}
+              </Grid>
+            ) : (
+              //If User has queried and they don't have any non-zero balances with erc20 tokens
+              <Text fontSize="lg">
+                No ERC-20 tokens with non-zero balance found for this address!
+                Please try connecting a different wallet or try another address
+              </Text>
+            )
           ) : (
-            "Please make a query! This may take a few seconds..."
+            //if user hasn't queried yet
+            <Text fontSize="lg">
+              "Please make a query! This may take a few seconds..."
+            </Text>
           )}
         </Flex>
       </Flex>
