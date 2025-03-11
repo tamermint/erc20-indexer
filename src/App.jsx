@@ -156,12 +156,12 @@ function App() {
     }
 
     const rawData = await alchemy.core.getTokenBalances(userAddress);
+    console.log(rawData.tokenBalances);
     const filtered = rawData.tokenBalances.filter(
       (t) => parseInt(t.tokenBalance, 16) > 0
     );
 
     setResults({ tokenBalances: filtered });
-    console.log(results);
 
     const tokenDataPromises = filtered.map((tokenBalance) =>
       alchemy.core.getTokenMetadata(tokenBalance.contractAddress)
@@ -427,7 +427,7 @@ function App() {
           <Heading my={20}>ERC-20 token balances:</Heading>
           {/*If user has queried and there are no nonzero token balances */}
           {hasQueried ? (
-            results.tokenBalances && results.length > 0 ? (
+            results.tokenBalances && results.tokenBalances.length > 0 ? (
               <Grid templateColumns="repeat(4, 1fr)" gap={8} maxWidth="250vw">
                 {results.tokenBalances.map((tokenBalance, i) => (
                   <GridItem
