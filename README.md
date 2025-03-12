@@ -1,5 +1,7 @@
 # Simple ERC-20 Indexer
 
+![img](./SPA-Home.png)
+
 This is an skeleton app that uses the Alchemy SDK rigged to Alchemy's Enhanced APIs in order to display all of an address's ERC-20 token balances.
 
 ## Set Up

@@ -23,7 +23,6 @@ import {
   useActiveWallet,
 } from "thirdweb/react";
 import { createThirdwebClient } from "thirdweb";
-import { BigNumber, utils } from "ethers";
 
 /**
  * A React component that displays a connect button, disconnect button,
@@ -125,7 +124,7 @@ function App() {
   });
 
   /**
-   * Fetches and sets the ERC-20 token balances for the current `userAddress` value. This value is the entered value of any address. Ignores tokens with zero balance
+   * Fetches and sets the ERC-20 token balances for the current `userAddress` value. This value is the entered value of any address - can be hexadecimal address or ENS name. Ignores tokens with zero balance
    *
    * @async
    * @function getTokenBalance
@@ -133,6 +132,17 @@ function App() {
    *
    */
   async function getTokenBalance() {
+    if (!userAddress) {
+      setInvalidUserAddress(true);
+      setTimeout(() => {
+        setInvalidUserAddress(false);
+      }, 5000);
+      setResults([]);
+      setTokenDataObjects([]);
+      setHasQueried(false);
+      return;
+    }
+
     const config = {
       apiKey: import.meta.env.VITE_ALCHEMY_API_KEY,
       network: Network.ETH_MAINNET,
@@ -140,23 +150,37 @@ function App() {
 
     const alchemy = new Alchemy(config);
 
-    if (!isAddress(userAddress)) {
-      setInvalidUserAddress(true);
-      setTimeout(() => {
-        setInvalidUserAddress(false);
-      }, 5000);
-      return;
+    let resolvedAddress;
+    if (isAddress(userAddress)) {
+      resolvedAddress = userAddress;
+    } else {
+      try {
+        resolvedAddress = await alchemy.core.resolveName(userAddress);
+        if (!resolvedAddress) {
+          setInvalidUserAddress(true);
+          setTimeout(() => {
+            setInvalidUserAddress(false);
+          }, 5000);
+          setResults([]);
+          setTokenDataObjects([]);
+          setHasQueried(false);
+          return;
+        }
+      } catch (e) {
+        console.error(e?.message);
+        setShowCustomErrorAlert(true);
+        setTimeout(() => {
+          setShowCustomErrorAlert(false);
+        }, 5000);
+        setResults([]);
+        setTokenDataObjects([]);
+        setHasQueried(false);
+        return;
+      }
     }
+    setUserAddress(resolvedAddress);
 
-    if (!userAddress) {
-      setInvalidUserAddress(true);
-      setTimeout(() => {
-        setInvalidUserAddress(false);
-      }, 5000);
-      return;
-    }
-
-    const rawData = await alchemy.core.getTokenBalances(userAddress);
+    const rawData = await alchemy.core.getTokenBalances(resolvedAddress);
     const filtered = rawData.tokenBalances.filter(
       (t) => parseInt(t.tokenBalance, 16) > 0
     );
@@ -395,7 +419,7 @@ function App() {
             borderColor="teal.300"
             color="teal.300"
             w="600px"
-            placeholder="Plug in address here"
+            placeholder="Plug in address or ENS name here"
             _placeholder={{ opacity: 0.4, color: "teal.300" }}
             focusBorderColor="teal.300"
             textAlign="center"
