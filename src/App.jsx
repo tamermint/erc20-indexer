@@ -318,7 +318,9 @@ function App() {
           status="error"
         >
           <AlertIcon />
-          <AlertTitle>Address is Missing or Invalid!</AlertTitle>
+          <AlertTitle>
+            ENS name or Wallet Address is ether Missing or Invalid!
+          </AlertTitle>
           <AlertDescription>Please try again!</AlertDescription>
         </Alert>
       )}
@@ -450,6 +452,7 @@ function App() {
           </Button>
           <Heading my={20}>ERC-20 token balances:</Heading>
           {/*If user has queried and there are no nonzero token balances */}
+          {console.log(results)}
           {hasQueried ? (
             results.tokenBalances && results.tokenBalances.length > 0 ? (
               <Grid templateColumns="repeat(4, 1fr)" gap={8} maxWidth="250vw">
