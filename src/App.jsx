@@ -294,6 +294,55 @@ function App() {
     setResults([]);
     setTokenDataObjects([]);
   }
+  //Todo -> check for very small balances and find a way to represent them on UI as-is
+  //example -> for vewake.eth, following are the console outputs :
+  /*rawString => 0.000000000126237017
+  App.jsx?t=1741898124903:198 parsed => 1.26237017e-10
+  App.jsx?t=1741898124903:200 Final Display =>  0.0000 -> we can't have this*/
+
+  /**
+   * Takes a large number and replaces numbers after decimal to appropriate suffix
+   * @function shortenLargeNumbers
+   * @param {*} num number to shorten
+   * @param {number} [decimals=2] default number of decimal places
+   * @returns {number} a number with suffix based on Trillion, Billion, Million, Thousands or as-is based on value
+   */
+  function shortenLargeNumbers(num, decimals = 2) {
+    if (num <= 0) {
+      return;
+    }
+    const abs = Math.abs(num);
+    if (abs >= 1.0e12) {
+      return (abs / 1.0e12).toFixed(decimals).replace(/\.0+$/, "") + "T";
+    }
+    if (abs >= 1.0e9) {
+      return (abs / 1.0e9).toFixed(decimals).replace(/\.0+$/, "") + "B";
+    }
+    if (abs >= 1.0e6) {
+      return (abs / 1.0e6).toFixed(decimals).replace(/\.0+$/, "") + "M";
+    }
+    if (abs >= 1.0e3) {
+      return (abs / 1.0e3).toFixed(decimals).replace(/\.0+$/, "") + "K";
+    } else {
+      return abs.toFixed(decimals).replace(/\0.+$/, "");
+    }
+  }
+  /**
+   * Takes raw balance of tokens returned from getTokenBalance and returns a well formatted number with appropriate suffix
+   * @function formatter
+   * @param {*} tokenBalance token balance of the token
+   * @param {*} decimals decimal places to format the balance
+   * @returns {string} the formatted number
+   */
+  function formatter(tokenBalance, decimals) {
+    const rawString = Utils.formatUnits(tokenBalance, decimals);
+
+    const parsed = parseFloat(rawString);
+
+    const display = shortenLargeNumbers(parsed, 4);
+
+    return display;
+  }
   /**
    * @description The returned value of the App function
    * @returns {JSX.Element}
@@ -452,10 +501,9 @@ function App() {
           </Button>
           <Heading my={20}>ERC-20 token balances:</Heading>
           {/*If user has queried and there are no nonzero token balances */}
-          {console.log(results)}
           {hasQueried ? (
             results.tokenBalances && results.tokenBalances.length > 0 ? (
-              <Grid templateColumns="repeat(4, 1fr)" gap={8} maxWidth="250vw">
+              <Grid templateColumns="repeat(2, 1fr)" gap={8} maxWidth="400vw">
                 {results.tokenBalances.map((tokenBalance, i) => (
                   <GridItem
                     color="teal.300"
@@ -473,26 +521,24 @@ function App() {
                       justifyContent="center"
                       alignItems="center"
                       gap="5px"
-                      w="200px"
-                      h="200px"
+                      w="500px"
+                      h="170px"
                       p="6"
                     >
                       <Box>
                         <b>Symbol:</b> {tokenDataObjects[i].symbol}
                       </Box>
                       <Box
-                        maxW="150px"
+                        maxW="400px"
                         whiteSpace="nowrap"
                         overflow="hidden"
                         textOverflow="ellipsis"
                       >
                         <b>Balance: </b>
-                        {parseFloat(
-                          Utils.formatUnits(
-                            tokenBalance.tokenBalance,
-                            tokenDataObjects[i].decimals
-                          )
-                        ).toFixed(4)}
+                        {formatter(
+                          tokenBalance.tokenBalance,
+                          tokenDataObjects[i].decimals
+                        )}
                       </Box>
                       <Image
                         boxSize="50px"

@@ -26,3 +26,16 @@ This is an skeleton app that uses the Alchemy SDK rigged to Alchemy's Enhanced A
   const activeWallet = useActiveWallet(); // maintain the active wallet
   ```
 - Refer to the global.html file in the output folder for detailed documentation
+
+````jsx
+parseFloat(
+                          Utils.formatUnits(
+                            tokenBalance.tokenBalance,
+                            tokenDataObjects[i].decimals
+                          )
+                        ).toLocaleString("en-GB", {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 4,
+                        })
+                        ```
+````
