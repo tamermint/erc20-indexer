@@ -294,11 +294,6 @@ function App() {
     setResults([]);
     setTokenDataObjects([]);
   }
-  //Todo -> check for very small balances and find a way to represent them on UI as-is
-  //example -> for vewake.eth, following are the console outputs :
-  /*rawString => 0.000000000126237017
-  App.jsx?t=1741898124903:198 parsed => 1.26237017e-10
-  App.jsx?t=1741898124903:200 Final Display =>  0.0000 -> we can't have this*/
 
   /**
    * Takes a large number and replaces numbers after decimal to appropriate suffix
@@ -336,6 +331,9 @@ function App() {
    */
   function formatter(tokenBalance, decimals) {
     const rawString = Utils.formatUnits(tokenBalance, decimals);
+    if (Number(rawString) < 1) {
+      return rawString;
+    }
 
     const parsed = parseFloat(rawString);
 
