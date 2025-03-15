@@ -2,7 +2,7 @@
 
 ![img](./SPA-Home-1.png)
 
-This is an skeleton app that uses the Alchemy SDK rigged to [Alchemy's Enhanced APIs](https://docs.alchemy.com/reference/enhanced-apis-overview) in order to display all of an address's ERC-20 token balances. Powered by [ThirdWeb](https://portal.thirdweb.com/) and [Chakra UI] (https://v2.chakra-ui.com/)
+This is an skeleton app that uses the Alchemy SDK rigged to [Alchemy's Enhanced APIs](https://docs.alchemy.com/reference/enhanced-apis-overview) in order to display all of an address's ERC-20 token balances. Powered by [ThirdWeb](https://portal.thirdweb.com/) and [Chakra UI] (https://v2.chakra-ui.com/). This project utilizes [jsdoc](https://jsdoc.app/) for code generation
 
 ## Set Up
 
