@@ -12,6 +12,7 @@ import {
   Heading,
   Image,
   Input,
+  Spinner,
   Text,
 } from "@chakra-ui/react";
 import { Alchemy, Network, Utils } from "alchemy-sdk";
@@ -62,6 +63,13 @@ function App() {
   const [tokenDataObjects, setTokenDataObjects] = useState([]);
 
   /**
+   * Whether the async call to getTokenBalance API has been fulfilled or not
+   * @member {boolean} isLoading
+   * @type {boolean}
+   */
+  const [isLoading, setIsLoading] = useState(false);
+
+  /**
    * Whether to show an alert indicating no wallet extension is installed.
    * @member {boolean} showNoWalletAlert
    * @type {boolean}
@@ -82,6 +90,11 @@ function App() {
    */
   const [showUserDidNotConnect, setShowUserDidNotConnect] = useState(false);
 
+  /**
+   * Whether to show an alert if the user address is valid or not
+   * @member {boolean} invalidUserAddress
+   * @type {boolean}
+   */
   const [invalidUserAddress, setInvalidUserAddress] = useState(false);
 
   /**
@@ -132,68 +145,77 @@ function App() {
    *
    */
   async function getTokenBalance() {
-    if (!userAddress) {
-      setInvalidUserAddress(true);
-      setTimeout(() => {
-        setInvalidUserAddress(false);
-      }, 5000);
-      setResults([]);
-      setTokenDataObjects([]);
-      setHasQueried(false);
-      return;
-    }
-
-    const config = {
-      apiKey: import.meta.env.VITE_ALCHEMY_API_KEY,
-      network: Network.ETH_MAINNET,
-    };
-
-    const alchemy = new Alchemy(config);
-
-    let resolvedAddress;
-    if (isAddress(userAddress)) {
-      resolvedAddress = userAddress;
-    } else {
-      try {
-        resolvedAddress = await alchemy.core.resolveName(userAddress);
-        if (!resolvedAddress) {
-          setInvalidUserAddress(true);
-          setTimeout(() => {
-            setInvalidUserAddress(false);
-          }, 5000);
-          setResults([]);
-          setTokenDataObjects([]);
-          setHasQueried(false);
-          return;
-        }
-      } catch (e) {
-        console.error(e?.message);
-        setShowCustomErrorAlert(true);
+    setIsLoading(true);
+    try {
+      if (!userAddress) {
+        setInvalidUserAddress(true);
         setTimeout(() => {
-          setShowCustomErrorAlert(false);
+          setInvalidUserAddress(false);
         }, 5000);
         setResults([]);
         setTokenDataObjects([]);
         setHasQueried(false);
         return;
       }
+
+      const config = {
+        apiKey: import.meta.env.VITE_ALCHEMY_API_KEY,
+        network: Network.ETH_MAINNET,
+      };
+
+      const alchemy = new Alchemy(config);
+
+      let resolvedAddress;
+      if (isAddress(userAddress)) {
+        resolvedAddress = userAddress;
+      } else {
+        try {
+          resolvedAddress = await alchemy.core.resolveName(userAddress);
+          if (!resolvedAddress) {
+            setInvalidUserAddress(true);
+            setTimeout(() => {
+              setInvalidUserAddress(false);
+            }, 5000);
+            setResults([]);
+            setTokenDataObjects([]);
+            setHasQueried(false);
+            return;
+          }
+        } catch (e) {
+          console.error(e?.message);
+          setShowCustomErrorAlert(true);
+          setTimeout(() => {
+            setShowCustomErrorAlert(false);
+          }, 5000);
+          setResults([]);
+          setTokenDataObjects([]);
+          setHasQueried(false);
+          return;
+        }
+      }
+      setUserAddress(resolvedAddress);
+
+      const rawData = await alchemy.core.getTokenBalances(resolvedAddress);
+      const filtered = rawData.tokenBalances.filter(
+        (t) => parseInt(t.tokenBalance, 16) > 0
+      );
+
+      setResults({ tokenBalances: filtered });
+
+      const tokenDataPromises = filtered.map((tokenBalance) =>
+        alchemy.core.getTokenMetadata(tokenBalance.contractAddress)
+      );
+      const metadata = await Promise.all(tokenDataPromises);
+
+      setTokenDataObjects(metadata);
+      setHasQueried(true);
+    } catch (error) {
+      console.error(error);
+      setShowCustomErrorAlert(true);
+      setTimeout(() => setShowCustomErrorAlert(false), 5000);
+    } finally {
+      setIsLoading(false);
     }
-    setUserAddress(resolvedAddress);
-
-    const rawData = await alchemy.core.getTokenBalances(resolvedAddress);
-    const filtered = rawData.tokenBalances.filter(
-      (t) => parseInt(t.tokenBalance, 16) > 0
-    );
-
-    setResults({ tokenBalances: filtered });
-
-    const tokenDataPromises = filtered.map((tokenBalance) =>
-      alchemy.core.getTokenMetadata(tokenBalance.contractAddress)
-    );
-    const metadata = await Promise.all(tokenDataPromises);
-
-    setTokenDataObjects(metadata);
-    setHasQueried(true);
   }
   /**
    * Fetches and sets the ERC-20 token balances for the current `userAddress` value. This is the address of the wallet connmected to the app. Ignores tokens with zero balance
@@ -205,6 +227,7 @@ function App() {
    */
 
   async function getOwnBalance() {
+    setIsLoading(true);
     if (!shortenedAddress || !activeWallet) {
       setShowUserDidNotConnect(true);
       setTimeout(() => {
@@ -220,8 +243,15 @@ function App() {
     setShowUserDidNotConnect(false);
     setShowCustomErrorAlert(false);
     setShowNoWalletAlert(false);
-
-    await getTokenBalance();
+    try {
+      await getTokenBalance();
+    } catch (error) {
+      console.error(error);
+      setShowCustomErrorAlert(true);
+      setTimeout(() => setShowCustomErrorAlert(false), 5000);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   /**
@@ -463,7 +493,15 @@ function App() {
             Get all the ERC-20 token balances of this address:
           </Heading>
           <Input
-            onChange={(e) => setUserAddress(e.target.value)}
+            onChange={(e) => {
+              const newValue = setUserAddress(e.target.value);
+              if (!newValue) {
+                setResults([]);
+                setTokenDataObjects([]);
+                setHasQueried(false);
+                setIsLoading(false);
+              }
+            }}
             variant="outline"
             borderColor="teal.300"
             color="teal.300"
@@ -499,7 +537,12 @@ function App() {
           </Button>
           <Heading my={20}>ERC-20 token balances:</Heading>
           {/*If user has queried and there are no nonzero token balances */}
-          {hasQueried ? (
+          {/*hasQueried && results.length == 0 ? (show the spinner div) : (hasQueried && results.tokenBalances && results.tokenBalances.length > 0 ? (gridTemplate...) : (No Erc20TokensFound) : (please make a query and this may take few seconds)) */}
+          {isLoading ? (
+            <Center>
+              <Spinner color="teal.300" size="xl"></Spinner>
+            </Center>
+          ) : hasQueried ? (
             results.tokenBalances && results.tokenBalances.length > 0 ? (
               <Grid templateColumns="repeat(2, 1fr)" gap={8} maxWidth="400vw">
                 {results.tokenBalances.map((tokenBalance, i) => (
@@ -559,7 +602,7 @@ function App() {
           ) : (
             //if user hasn't queried yet
             <Text fontSize="lg">
-              "Please make a query! This may take a few seconds..."
+              Please make a query! This may take a few seconds...
             </Text>
           )}
         </Flex>
