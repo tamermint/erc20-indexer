@@ -619,7 +619,7 @@ function App() {
       >
         <Text fontSize="lg">
           Disclaimer: Always remember to use a dummy wallet with some funds for
-          connecting dapps. Please DO NOT use primary wallet for testing
+          connecting to dapps. Please DO NOT use primary wallet for testing
           purposes
         </Text>
       </Box>
