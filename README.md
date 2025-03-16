@@ -6,6 +6,8 @@
 
 This is an skeleton app that uses the Alchemy SDK rigged to [Alchemy's Enhanced APIs](https://docs.alchemy.com/reference/enhanced-apis-overview) in order to display all of an address's ERC-20 token balances. Powered by [ThirdWeb](https://portal.thirdweb.com/) and [Chakra UI] (https://v2.chakra-ui.com/). This project utilizes [jsdoc](https://jsdoc.app/) for code generation
 
+> DISCLAIMER: PLEASE REMEMBER TO AUDIT CODE BEFORE TRYING TO TEST ANY APP. PLEASE DO NOT CONNECT YOUR PRIMARY WALLET TO TRY THIS APP. ALWAYS REMEMBER TO USE A WALLET WITH NON-ZERO FUNDS IF CONNECTING. KEYING IN YOUR WALLET ADDRESS / ENS NAME IS THE BEST WAY TO CHECK BALANCE
+
 ## Set Up (Local)
 
 1. Clone this repo via git clone via `https://github.com/tamermint/erc20-indexer.git`
