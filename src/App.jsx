@@ -14,6 +14,7 @@ import {
   Input,
   Spinner,
   Text,
+  Portal,
 } from "@chakra-ui/react";
 import { Alchemy, Network, Utils } from "alchemy-sdk";
 import { useState } from "react";
@@ -607,6 +608,21 @@ function App() {
           )}
         </Flex>
       </Flex>
+      <Box
+        display="flex"
+        flexDirection="column"
+        position="absolute"
+        bottom="-250"
+        right="350"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Text fontSize="lg">
+          Disclaimer: Always remember to use a dummy wallet with some funds for
+          connecting dapps. Please DO NOT use primary wallet for testing
+          purposes
+        </Text>
+      </Box>
     </Box>
   );
 }
